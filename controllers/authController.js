@@ -115,10 +115,19 @@ const verifyEmail =  async(req, res) => {
 }
 
 
+const loginStudent = async(req, res) => {
+    await login(req, res, 'student')
+}
+
+
+const loginAdmin = async(req, res) => {
+    await login(req, res, 'admin')
+}
 
 
 
-const login = async(req, res)=> {
+
+const login = async(req, res, role)=> {
     const {school_email, password} = req.body
 
     // check if email and password exist in db
@@ -127,9 +136,9 @@ const login = async(req, res)=> {
     }
 
     //check user if exist in db, if not throw error
-    const user = await User.findOne({school_email})
+    const user = await User.findOne({school_email, role})
     if(!user) {
-        throw new CustomError.UnauthenticatedError('Invalid Credentials, User not found')
+        throw new CustomError.UnauthenticatedError('Invalid Credentials')
     }
 
     //check if password correct, if not throw error
@@ -168,7 +177,7 @@ const login = async(req, res)=> {
     }
 
 
-    
+
     //setup token
     refreshToken = crypto.randomBytes(40).toString('hex')
     const userAgent = req.headers['user-agent']
@@ -177,11 +186,7 @@ const login = async(req, res)=> {
     //token create
     await Token.create(userToken)
 
-
-
     attachedCookiesToResponse({ res, user: tokenUser, refreshToken})
-
-    
 
 
     res.status(StatusCodes.OK).json({msg: 'login user', user:tokenUser})
@@ -279,7 +284,8 @@ const resetPassword = async(req, res) => {
 module.exports = {
     register,
     verifyEmail,
-    login,
+    loginStudent,
+    loginAdmin,
     logout,
     forgotPassword,
     resetPassword
